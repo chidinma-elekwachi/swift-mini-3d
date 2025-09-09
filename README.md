@@ -1,5 +1,12 @@
 # React + Vite
 
+# How to Use This Editor
+Click "Import GLB Model" to load a 3D model
+Use your mouse to rotate (click and drag), pan (right-click and drag), and zoom (scroll)
+Click "Add Hotspot" to place markers on your model with labels
+Use the "View" button to focus the camera on a specific hotspot
+Use the "Delete" button to remove unwanted hotspots
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
