@@ -290,12 +290,16 @@ const MiniEditor = () => {
           <li>Use the "Delete" button to remove unwanted hotspots</li>
         </ul>
       </div>
+
+      <footer className="footer">
+        <p>
+          Developed by Chidinma. View the source code on{' '}
+          <a href="https://github.com/chidinma-elekwachi/swift-mini-3d" target="_blank" rel="noopener noreferrer">GitHub</a>.
+        </p>
+      </footer>
     </div>
   );
 };
-
-// Styles would be implemented using CSS modules or styled-components in a real React app
-// For this example, we'll include them in a style tag
 
 const App = () => {
   return (
