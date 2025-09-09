@@ -230,7 +230,7 @@ const MiniEditor = () => {
   return (
     <div className="container">
       <header>
-        <h1>SwiftXR Mini 3D Editor</h1>
+        <h1>Chidinma's Mini 3D Editor</h1>
         <p className="subtitle">
           Import, view, and annotate 3D models with interactive hotspots
         </p>
