@@ -10,6 +10,7 @@ const MiniEditor = () => {
   const [hotspots, setHotspots] = useState([]);
   const [selectedHotspot, setSelectedHotspot] = useState(null);
   const [sceneInfo, setSceneInfo] = useState('No model loaded');
+  const [isAddingHotspot, setIsAddingHotspot] = useState(false);
   
   // Three.js references
   const sceneRef = useRef(new THREE.Scene());
@@ -18,6 +19,9 @@ const MiniEditor = () => {
   const controlsRef = useRef(null);
   const modelRef = useRef(null);
   const hotspotGroupRef = useRef(new THREE.Group());
+  const raycasterRef = useRef(new THREE.Raycaster());
+  const mouseRef = useRef(new THREE.Vector2());
+  const textSpritesRef = useRef([]);
   
   useEffect(() => {
     // Initialize Three.js scene
@@ -68,6 +72,28 @@ const MiniEditor = () => {
     controls.dampingFactor = 0.05;
     controlsRef.current = controls;
     
+    // Handle mouse click for hotspot placement
+    const handleClick = (event) => {
+      if (!isAddingHotspot || !modelRef.current) return;
+      
+      const rect = canvas.getBoundingClientRect();
+      mouseRef.current.x = ((event.clientX - rect.left) / canvas.clientWidth) * 2 - 1;
+      mouseRef.current.y = -((event.clientY - rect.top) / canvas.clientHeight) * 2 + 1;
+      
+      raycasterRef.current.setFromCamera(mouseRef.current, camera);
+      const intersects = raycasterRef.current.intersectObject(modelRef.current, true);
+      
+      if (intersects.length > 0) {
+        const hotspotName = prompt('Enter a name for this hotspot:');
+        if (!hotspotName) return;
+        
+        createHotspot(intersects[0].point, hotspotName);
+        setIsAddingHotspot(false);
+      }
+    };
+    
+    canvas.addEventListener('click', handleClick);
+    
     // Handle window resize
     const handleResize = () => {
       const canvas = renderer.domElement;
@@ -94,9 +120,63 @@ const MiniEditor = () => {
     
     return () => {
       window.removeEventListener('resize', handleResize);
+      canvas.removeEventListener('click', handleClick);
       if (renderer) renderer.dispose();
     };
-  }, []);
+  }, [isAddingHotspot]);
+  
+  const createTextSprite = (text, position) => {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = 128;
+    canvas.height = 64;
+    
+    // Draw background
+    context.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw text
+    context.font = '24px Arial';
+    context.fillStyle = '#000';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(text, canvas.width / 2, canvas.height / 2);
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    const material = new THREE.SpriteMaterial({ map: texture });
+    const sprite = new THREE.Sprite(material);
+    sprite.position.copy(position);
+    sprite.scale.set(1, 0.5, 1);
+    sprite.position.y += 0.3; // Position above the marker
+    
+    return sprite;
+  };
+  
+  const createHotspot = (position, name) => {
+    // Create a visual marker for the hotspot
+    const geometry = new THREE.SphereGeometry(0.05, 16, 16);
+    const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const marker = new THREE.Mesh(geometry, material);
+    marker.position.copy(position);
+    
+    // Create text sprite for the label
+    const textSprite = createTextSprite(name, position);
+    
+    // Add both to the hotspot group
+    hotspotGroupRef.current.add(marker);
+    hotspotGroupRef.current.add(textSprite);
+    
+    // Add hotspot to state
+    const newHotspot = {
+      id: Date.now(),
+      name: name,
+      position: position,
+      marker: marker,
+      textSprite: textSprite
+    };
+    
+    setHotspots([...hotspots, newHotspot]);
+  };
   
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -117,6 +197,7 @@ const MiniEditor = () => {
     }
     setHotspots([]);
     setSelectedHotspot(null);
+    textSpritesRef.current = [];
     
     // Load new model
     const loader = new GLTFLoader();
@@ -165,48 +246,26 @@ const MiniEditor = () => {
     );
   };
   
-  const addHotspot = () => {
+  const startAddingHotspot = () => {
     if (!modelRef.current) {
       alert('Please load a model first');
       return;
     }
     
-    const hotspotName = prompt('Enter a name for this hotspot:');
-    if (!hotspotName) return;
-    
-    // In a real implementation, you would use a raycast from the camera
-    // to determine the position on the model. For simplicity, we'll place
-    // it at a fixed position relative to the model.
-    const position = new THREE.Vector3(
-      Math.random() * 2 - 1,
-      Math.random() * 2 + 1,
-      Math.random() * 2 - 1
-    );
-    
-    // Create a visual marker for the hotspot
-    const geometry = new THREE.SphereGeometry(0.1, 16, 16);
-    const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    const marker = new THREE.Mesh(geometry, material);
-    marker.position.copy(position);
-    
-    // Add the marker to the hotspot group
-    hotspotGroupRef.current.add(marker);
-    
-    // Add hotspot to state
-    const newHotspot = {
-      id: Date.now(),
-      name: hotspotName,
-      position: position,
-      marker: marker
-    };
-    
-    setHotspots([...hotspots, newHotspot]);
+    setIsAddingHotspot(true);
+    setSceneInfo('Click on the model to place a hotspot');
+  };
+  
+  const cancelAddingHotspot = () => {
+    setIsAddingHotspot(false);
+    setSceneInfo(modelRef.current ? `Model: ${sceneInfo.split(': ')[1]}` : 'No model loaded');
   };
   
   const deleteHotspot = (id) => {
     const hotspot = hotspots.find(h => h.id === id);
     if (hotspot) {
       hotspotGroupRef.current.remove(hotspot.marker);
+      hotspotGroupRef.current.remove(hotspot.textSprite);
       setHotspots(hotspots.filter(h => h.id !== id));
       
       if (selectedHotspot === id) {
@@ -241,6 +300,12 @@ const MiniEditor = () => {
           <canvas ref={canvasRef} id="three-canvas"></canvas>
           <div className="status-bar">{sceneInfo}</div>
           {!modelLoaded && <div className="loading">Load a model to begin</div>}
+          {isAddingHotspot && (
+            <div className="adding-hotspot-overlay">
+              <p>Click on the model to place a hotspot</p>
+              <button onClick={cancelAddingHotspot}>Cancel</button>
+            </div>
+          )}
         </div>
         
         <div className="controls-panel">
@@ -257,8 +322,11 @@ const MiniEditor = () => {
             Import GLB Model
           </label>
           
-          <button className="button button-secondary" onClick={addHotspot}>
-            Add Hotspot
+          <button 
+            className={`button button-secondary ${isAddingHotspot ? 'active' : ''}`}
+            onClick={isAddingHotspot ? cancelAddingHotspot : startAddingHotspot}
+          >
+            {isAddingHotspot ? 'Cancel Hotspot' : 'Add Hotspot'}
           </button>
           
           <div className="hotspot-list">
@@ -267,7 +335,7 @@ const MiniEditor = () => {
               <p style={{ fontSize: '0.9rem', color: '#a0a0b8' }}>No hotspots added</p>
             ) : (
               hotspots.map(hotspot => (
-                <div key={hotspot.id} className="hotspot-item">
+                <div key={hotspot.id} className={`hotspot-item ${selectedHotspot === hotspot.id ? 'selected' : ''}`}>
                   <span className="hotspot-name">{hotspot.name}</span>
                   <div className="hotspot-actions">
                     <button onClick={() => focusHotspot(hotspot.id)}>View</button>
@@ -285,7 +353,7 @@ const MiniEditor = () => {
         <ul>
           <li>Click "Import GLB Model" to load a 3D model</li>
           <li>Use your mouse to rotate (click and drag), pan (right-click and drag), and zoom (scroll)</li>
-          <li>Click "Add Hotspot" to place markers on your model with labels</li>
+          <li>Click "Add Hotspot" and then click on the model to place a labeled marker</li>
           <li>Use the "View" button to focus the camera on a specific hotspot</li>
           <li>Use the "Delete" button to remove unwanted hotspots</li>
         </ul>

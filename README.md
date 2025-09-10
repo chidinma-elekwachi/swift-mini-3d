@@ -1,19 +1,51 @@
-# React + Vite
+# Swift Model Viewer
 
-# How to Use This Editor
-Click "Import GLB Model" to load a 3D model
-Use your mouse to rotate (click and drag), pan (right-click and drag), and zoom (scroll)
-Click "Add Hotspot" to place markers on your model with labels
-Use the "View" button to focus the camera on a specific hotspot
-Use the "Delete" button to remove unwanted hotspots
+Swift is a React-based web application for viewing and annotating 3D models (GLB format). It provides an interactive editor for placing hotspots, labeling points of interest, and exploring models with intuitive controls.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Features
 
-Currently, two official plugins are available:
+- **Import GLB Models:** Easily load 3D models in GLB format.
+- **Interactive Controls:** Rotate, pan, and zoom the model using mouse gestures.
+- **Add Hotspots:** Place labeled markers on your model to highlight important areas.
+- **Focus View:** Click "View" to center the camera on a selected hotspot.
+- **Delete Hotspots:** Remove unwanted markers with a single click.
+- **Responsive Design:** Works well on both desktop and mobile devices.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Getting Started
 
-## Expanding the ESLint configuration
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+2. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+3. **Open your browser:**  
+   Visit `http://localhost:5173` (or the port shown in your terminal).
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Usage
+
+- Click **Import GLB Model** to load your 3D file.
+- Use your mouse to:
+  - **Rotate:** Click and drag
+  - **Pan:** Right-click and drag
+  - **Zoom:** Scroll wheel
+- Click **Add Hotspot** to place a marker with a label.
+- Use the **View** button to focus on a hotspot.
+- Use the **Delete** button to remove a hotspot.
+
+## Technologies Used
+
+- [React](https://react.dev/)
+- [Vite](https://vitejs.dev/)
+- [Three.js](https://threejs.org/) (for 3D rendering)
+
+## Development Notes
+
+This project uses Vite for fast development and HMR, with ESLint for code quality.  
+For TypeScript support, see the [Vite React TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts).
+
+---
+
+Feel free to contribute or customize for your own XR/3D
